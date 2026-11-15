@@ -1,0 +1,252 @@
+/* Playground 外观。角色本身的动画在 core/faces.css */
+:root {
+  --bg: #18191c;
+  --surface: #1e1f23;
+  --card: rgba(38, 39, 44, .86);
+  --raised: #2a2b30;
+  --line: rgba(255, 255, 255, .07);
+  --line-2: rgba(255, 255, 255, .12);
+  --text: #f2f2f4;
+  --muted: #8b8d96;
+  --faint: #5d5f68;
+  --ease: cubic-bezier(.2, .9, .2, 1);
+  --spring: cubic-bezier(.3, 1.5, .5, 1);
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; color: var(--text);
+  font: 14px/1.4 Inter, -apple-system, "PingFang SC", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  background: var(--bg) repeating-linear-gradient(135deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 9px);
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 2px; }
+
+/* ---------- 舞台：铺满屏幕的圆角卡片 ---------- */
+#stage {
+  position: fixed; inset: 10px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(rgba(255, 255, 255, .045) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--surface);
+}
+/*
+ * 跟随鼠标的聚光：一个固定大小的图层，只用 transform 平移。
+ * 之前是改整个舞台背景的 CSS 变量，鼠标一动整屏重绘；现在只在 GPU 上挪图层。
+ */
+.spot {
+  position: absolute; left: 0; top: 0; width: 1040px; height: 1040px; margin: -520px 0 0 -520px; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .055), transparent);
+  transform: translate3d(50vw, 50vh, 0); will-change: transform;
+}
+#grid { position: absolute; inset: 58px 18px 42px; display: grid; contain: layout style; }
+
+.char { position: relative; place-self: center; width: var(--cs); height: var(--cs); cursor: pointer; contain: layout style; transition: opacity .5s var(--ease), filter .5s var(--ease); }
+/* 每只角色单独一个合成层：一只在动时不会让旁边的跟着重绘 */
+.char svg { position: relative; z-index: 1; width: 100%; height: 100%; display: block; will-change: transform; transition: scale .35s var(--spring); animation: enter .7s var(--spring) var(--d, 0ms) backwards; }
+@keyframes enter { from { transform: translateY(16px) scale(0); opacity: 0; } }
+/*
+ * 角色换表情时会整体替换 SVG 内容。如果鼠标按下的那个 <path> 在松开前被替换掉，浏览器就不会触发 click。
+ * 所以让 SVG 不接收指针事件，按下和松开永远落在外层这个不会被替换的 .char 上。
+ */
+.char svg, #pv svg { pointer-events: none; }
+.char:hover .bf-squash { animation: bf-jelly .7s ease-out; }
+@keyframes exit { to { transform: scale(0) rotate(12deg); opacity: 0; } }
+
+/* 选中态：同色柔光 + 慢慢转的虚线轨道 + 底部小标记 */
+.char::before, .char::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; opacity: 0; }
+.char::before {
+  inset: -18%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent 72%);
+  transform: scale(.5); transition: opacity .45s var(--ease), transform .6s var(--spring);
+}
+.char::after {
+  inset: -6%; border: 1.5px dashed rgba(255, 255, 255, .55);
+  transform: scale(.7); transition: opacity .3s var(--ease), transform .5s var(--spring);
+}
+#stage.focus .char:not(.sel) { opacity: .16; filter: saturate(.3); }
+/* 检查器打开时，背后变暗的角色几乎看不见，暂停它们的所有动画 */
+#stage.focus .char:not(.sel) svg * { animation-play-state: paused !important; }
+.char.sel::before { opacity: 1; transform: scale(1); }
+.char.sel::after { opacity: 1; transform: scale(1); animation: orbit 16s linear infinite; }
+.char.sel svg { scale: 1.08; }
+@keyframes orbit { from { rotate: 0deg; } to { rotate: 360deg; } }
+
+/* ---------- 顶栏 ---------- */
+.brand { position: absolute; top: 18px; left: 22px; display: flex; align-items: baseline; gap: 10px; font-weight: 600; letter-spacing: -.01em; user-select: none; }
+.brand .n { font: 500 11px var(--mono); color: var(--faint); }
+
+.tools { position: absolute; top: 12px; right: 12px; z-index: 5; display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .035); border: 1px solid var(--line); }
+.ib { position: relative; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); transition: background .2s, color .2s, transform .25s var(--spring); }
+.ib:hover, .ib[aria-expanded="true"] { background: rgba(255, 255, 255, .08); color: var(--text); }
+.ib:active { transform: scale(.88); }
+.ib svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ib .lc { font: 600 11px var(--mono); letter-spacing: -.02em; }
+.ib[data-tip]::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 10px); right: 0; white-space: nowrap; font-size: 11.5px; color: var(--text);
+  background: var(--raised); border: 1px solid var(--line-2); padding: 5px 9px; border-radius: 8px;
+  opacity: 0; transform: translateY(-4px); pointer-events: none; transition: .2s var(--ease);
+}
+.ib:hover::after { opacity: 1; transform: none; }
+.tools.menu-open .ib::after { display: none; }
+.spin-once svg { animation: r360 .7s var(--ease); }
+@keyframes r360 { to { transform: rotate(360deg); } }
+
+/* 声音：四根音柱，播放时跳动 */
+.eq { display: flex; align-items: center; gap: 2.5px; height: 14px; }
+.eq i { width: 2.5px; height: 4px; border-radius: 2px; background: currentColor; transition: height .3s var(--ease); }
+#sound[data-state="on"] { color: var(--text); }
+#sound[data-state="on"] .eq i { animation: eq .9s ease-in-out infinite; }
+#sound[data-state="on"] .eq i:nth-child(2) { animation-duration: .7s; animation-delay: -.3s; }
+#sound[data-state="on"] .eq i:nth-child(3) { animation-duration: 1.1s; animation-delay: -.6s; }
+#sound[data-state="on"] .eq i:nth-child(4) { animation-duration: .8s; animation-delay: -.15s; }
+@keyframes eq { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+#sound[data-state="off"] .eq i { height: 2.5px; }
+#sound[data-state="locked"]::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); animation: halo 1.8s var(--ease) infinite; }
+@keyframes halo { from { transform: scale(.7); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+
+/* 语言菜单 */
+.menu {
+  position: absolute; top: 54px; right: 12px; z-index: 6; min-width: 168px; padding: 5px; border-radius: 14px;
+  background: var(--card); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--line-2); box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+  opacity: 0; transform: translateY(-6px) scale(.97); transform-origin: top right; pointer-events: none; transition: .25s var(--ease);
+}
+.menu.open { opacity: 1; transform: none; pointer-events: auto; }
+.menu button { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 8px 10px; border-radius: 9px; font-size: 13px; color: var(--muted); transition: background .15s, color .15s; }
+.menu button:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
+.menu button[aria-checked="true"] { color: var(--text); }
+.menu svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.menu button[aria-checked="true"] svg { opacity: 1; }
+
+.hint {
+  position: absolute; left: 22px; bottom: 15px; font-size: 12px; user-select: none;
+  background: linear-gradient(90deg, var(--faint) 0 40%, #e9e9ee 50%, var(--faint) 60% 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 3.2s linear infinite;
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* 切换语言时文案淡出再淡入 */
+[data-i18n] { transition: opacity .16s var(--ease), filter .16s var(--ease); }
+.lang-swap [data-i18n] { opacity: 0; filter: blur(3px); }
+
+/* ---------- 检查器：浮动玻璃卡片 ---------- */
+#insp {
+  position: fixed; top: 62px; right: 22px; bottom: 22px; width: 360px; z-index: 10; display: flex; flex-direction: column;
+  background: var(--card); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--line-2); border-radius: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .05);
+  opacity: 0; transform: translateX(28px) scale(.97); pointer-events: none; transition: opacity .35s var(--ease), transform .5s var(--ease);
+}
+#insp.open { opacity: 1; transform: none; pointer-events: auto; }
+.ih { display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 0 18px; }
+.ih .t { display: flex; align-items: baseline; gap: 8px; font-weight: 600; }
+.ih .t span { font: 500 11px var(--mono); color: var(--muted); }
+.body {
+  overflow-y: auto; min-height: 0; padding: 0 18px 18px; flex: 1; scrollbar-width: thin; scrollbar-color: #3a3b40 transparent;
+  /* 滚动后，内容在顶边柔和淡出，而不是被一条暗色阴影压住 */
+  --fade: 0px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade));
+  transition: --fade .3s var(--ease);
+}
+@property --fade { syntax: "<length>"; inherits: false; initial-value: 0px; }
+#insp.compact .body { --fade: 22px; }
+
+/* 固定预览：不随内容滚动；内容滚下去后收成紧凑尺寸，底部出现一条细分隔线 */
+.pvwrap { position: relative; padding: 12px 18px 12px; flex-shrink: 0; }
+.pvwrap::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 0; height: 1px; pointer-events: none;
+  background: var(--line); opacity: 0; transition: opacity .3s var(--ease);
+}
+#insp.compact .pvwrap::after { opacity: 1; }
+#pv {
+  height: 176px; border-radius: 14px; border: 1px solid var(--line); display: grid; place-items: center; cursor: pointer; overflow: hidden;
+  background: radial-gradient(rgba(255, 255, 255, .05) 1px, transparent 1.2px) 0 0 / 16px 16px, rgba(0, 0, 0, .18);
+  transition: height .45s var(--ease);
+}
+#pv svg { width: 140px; height: 140px; transition: width .45s var(--ease), height .45s var(--ease); }
+#insp.compact #pv { height: 112px; }
+#insp.compact #pv svg { width: 92px; height: 92px; }
+.sec { margin-top: 18px; }
+.body > .sec:first-child { margin-top: 6px; }
+.lab { display: flex; gap: 8px; align-items: baseline; font-size: 12px; color: var(--muted); margin-bottom: 9px; }
+.lab b { font: 500 10.5px var(--mono); color: var(--faint); }
+
+/* 药丸：情绪 */
+.pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 5px 10px; border-radius: 999px; color: var(--muted); background: rgba(255, 255, 255, .035); border: 1px solid var(--line); transition: background .2s, color .2s, border-color .2s, transform .25s var(--spring); }
+.pill:hover { color: var(--text); border-color: var(--line-2); }
+.pill:active { transform: scale(.95); }
+.pill.on { background: #f2f2f4; color: #151517; border-color: #f2f2f4; font-weight: 500; }
+
+/* 分段控件：滑动指示条 */
+.seg { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, .25); border: 1px solid var(--line); --n: 3; --i: 0; }
+.seg .ind { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n)); border-radius: 999px; background: #f2f2f4; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); transform: translateX(calc(var(--i) * 100%)); transition: transform .45s var(--spring); }
+.seg button { position: relative; z-index: 1; font-size: 12px; padding: 6px 0; color: var(--muted); transition: color .25s; }
+.seg button.on { color: #151517; font-weight: 500; }
+.seg-sm { margin-top: 6px; width: 62%; }
+.seg-sm button { font-size: 11px; padding: 4px 0; }
+.seg-sm .ind { background: rgba(255, 255, 255, .14); box-shadow: none; }
+.seg-sm button.on { color: var(--text); }
+#sides { display: grid; max-height: 0; opacity: 0; margin-top: 0; overflow: hidden; border-width: 0; padding-block: 0; transition: max-height .35s var(--ease), opacity .25s, margin-top .35s var(--ease), padding .35s var(--ease); }
+#sides.show { max-height: 40px; opacity: 1; margin-top: 6px; padding-block: 3px; border-width: 1px; }
+
+/* 缩略图选择器：每个选项都是"当前角色换上它"的样子 */
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 3px 6px; border-radius: 12px; min-width: 0;
+  background: rgba(255, 255, 255, .025); border: 1px solid var(--line);
+  transition: background .2s, border-color .2s, box-shadow .25s, transform .3s var(--spring);
+}
+.tile:hover { background: rgba(255, 255, 255, .06); border-color: var(--line-2); transform: translateY(-2px); }
+.tile:active { transform: scale(.95); }
+.tile .th { width: 46px; height: 46px; transition: transform .35s var(--spring); }
+.tile:hover .th { transform: scale(1.08) rotate(-3deg); }
+.tile svg { width: 100%; height: 100%; overflow: visible; }
+/* 缩略图是静态的：二十多个格子里的蚊香眼、汗滴、呆毛如果都在动，既耗性能又分散注意力 */
+.tile svg * { animation: none !important; }
+.tile .tl { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; transition: color .2s; }
+.tile.on { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .6); box-shadow: 0 0 0 3px rgba(255, 255, 255, .07), 0 8px 20px rgba(0, 0, 0, .25); }
+.tile.on .tl { color: var(--text); font-weight: 500; }
+.tile .bd {
+  position: absolute; top: 5px; right: 5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; display: grid; place-items: center;
+  background: #f2f2f4; color: #151517; font: 700 9px var(--mono); transform: scale(0); transition: transform .35s var(--spring);
+}
+.tile .bd svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tile.on .bd { transform: scale(1); }
+.tiles.anim .tile { animation: tileIn .42s var(--ease) backwards; animation-delay: calc(var(--k) * 16ms); }
+@keyframes tileIn { from { opacity: 0; transform: translateY(8px) scale(.94); } }
+
+/* 颜色 */
+.sws { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.sw { width: 22px; height: 22px; border-radius: 50%; background: var(--c); display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); transition: box-shadow .25s, transform .3s var(--spring); }
+.sw:hover { transform: scale(1.15); }
+.sw svg { width: 11px; height: 11px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(.4); transition: .3s var(--spring); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); }
+.sw.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px #f2f2f4; }
+.sw.on svg { opacity: 1; transform: none; }
+#shape { margin-left: auto; }
+#shape svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 代码 */
+pre { margin: 0; font: 11.5px/1.65 var(--mono); color: #c9cad1; background: rgba(0, 0, 0, .25); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; overflow-x: auto; }
+pre .c { color: var(--faint); }
+pre .kw { color: #f0abfc; }
+pre .k { color: #a5b4fc; }
+pre .s { color: #86efac; }
+pre .n { color: #fcd34d; }
+
+.foot { display: flex; gap: 6px; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
+.btn { flex: 1; font-size: 12.5px; font-weight: 500; padding: 8px 0; border-radius: 999px; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); transition: background .2s, transform .25s var(--spring); }
+.btn:hover { background: rgba(255, 255, 255, .1); }
+.btn:active { transform: scale(.96); }
+.btn.pri { background: #f2f2f4; color: #151517; border-color: #f2f2f4; }
+.btn.pri:hover { background: #fff; }
+
+@media (max-width: 640px) {
+  #stage { inset: 6px; border-radius: 16px; }
+  #grid { inset: 54px 8px 36px; }
+  .hint { left: 16px; bottom: 12px; }
+  #insp { top: auto; left: 6px; right: 6px; bottom: 6px; width: auto; height: 74dvh; transform: translateY(40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint, .char.sel::after, .tiles.anim .tile, #sound .eq i { animation: none !important; }
+}

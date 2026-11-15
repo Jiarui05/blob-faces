@@ -1,0 +1,69 @@
+/*
+ * blob-faces 动画样式。配合 renderFace(spec, { animated: true }) 使用。
+ * 所有 class 都带 bf- 前缀，避免和你的项目冲突。
+ *
+ * 可用的状态 class（加在 <svg> 上）：
+ *   bf-blink   眨眼
+ *   bf-lookL   视线朝左（斜眼会换方向）
+ * 可用的变量：
+ *   --bf-delay 身体动效的起始偏移，给每个角色不同值可以错开节奏
+ */
+.bf-face { overflow: visible; }
+
+/* ---------- 层级：pop（换表情弹一下）> lean（朝向倾斜）> bob（情绪动效）> squash（悬停果冻） ---------- */
+.bf-pop, .bf-lean, .bf-bob, .bf-squash { transform-box: view-box; transform-origin: 60px 106px; }
+.bf-lean { transition: transform .35s cubic-bezier(.3, 1.5, .5, 1); }
+.bf-pop.bf-go { animation: bf-pop .5s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes bf-pop { 35% { transform: scale(1.22, .78); } 65% { transform: scale(.92, 1.1); } }
+.bf-face:hover .bf-squash { animation: bf-jelly .7s ease-out; }
+@keyframes bf-jelly { 25% { transform: scale(1.16, .84); } 50% { transform: scale(.9, 1.12); } 75% { transform: scale(1.05, .96); } }
+
+/* ---------- 情绪身体动效 ---------- */
+.bf-a-bounce { animation: bf-bounce 1.1s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-bounce { 20% { transform: scale(1.08, .92); } 50% { transform: translateY(-9px) scale(.95, 1.06); } 80% { transform: scale(1.04, .96); } }
+.bf-a-shake { animation: bf-shake 1.6s linear var(--bf-delay, 0s) infinite; }
+@keyframes bf-shake { 0%, 55%, 100% { transform: none; } 60% { transform: translateX(-2px) rotate(-3deg); } 65% { transform: translateX(2px) rotate(3deg); } 70% { transform: translateX(-2px) rotate(-3deg); } 75% { transform: translateX(2px) rotate(2deg); } 82% { transform: scale(1.06, .94); } }
+.bf-a-droop { animation: bf-droop 3.2s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-droop { 50% { transform: translateY(2px) scale(1.05, .94); } }
+.bf-a-jump { animation: bf-jump 2.2s ease-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-jump { 0%, 60%, 100% { transform: none; } 66% { transform: scale(1.12, .86); } 74% { transform: translateY(-15px) scale(.9, 1.12); } 84% { transform: scale(1.1, .9); } 92% { transform: scale(.97, 1.03); } }
+.bf-a-sway { animation: bf-sway 2.6s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.bf-a-wobble { animation: bf-wobble 1.3s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-wobble { 0%, 100% { transform: rotate(-9deg) translateX(-2px); } 50% { transform: rotate(9deg) translateX(2px); } }
+.bf-a-hyper { animation: bf-hyper .5s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-hyper { 0%, 100% { transform: scale(1.06, .94); } 50% { transform: translateY(-7px) scale(.96, 1.05) rotate(3deg); } }
+.bf-a-sleep { animation: bf-sleep 3.8s ease-in-out var(--bf-delay, 0s) infinite; }
+@keyframes bf-sleep { 50% { transform: scale(1.07, .93); } }
+.bf-a-shiver { animation: bf-shiver .14s linear var(--bf-delay, 0s) infinite; }
+@keyframes bf-shiver { 0%, 100% { transform: translateX(-1px); } 50% { transform: translateX(1px); } }
+
+/* ---------- 视线与眨眼 ---------- */
+.bf-look { transition: transform .3s ease-out; }
+.bf-pupil { transition: transform .2s ease-out; }
+.bf-lookL .bf-pl { display: inline; }
+.bf-lookL .bf-pr { display: none; }
+.bf-eye { transform-box: fill-box; transform-origin: center; transition: transform .07s; }
+.bf-blink .bf-eye { transform: scaleY(.1); }
+
+/* ---------- 部件自带小动画 ---------- */
+.bf-spin { transform-box: fill-box; transform-origin: center; animation: bf-spin 1.4s linear infinite; }
+@keyframes bf-spin { to { transform: rotate(360deg); } }
+.bf-twinkle { transform-box: fill-box; transform-origin: center; animation: bf-tw .9s ease-in-out infinite; }
+@keyframes bf-tw { 50% { transform: scale(.72) rotate(18deg); } }
+.bf-drip { animation: bf-drip 1.8s ease-in infinite; }
+@keyframes bf-drip { 0% { transform: translateY(-3px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+.bf-flicker { animation: bf-flick .8s steps(2) infinite; }
+@keyframes bf-flick { 50% { opacity: .15; } }
+.bf-throb { transform-box: fill-box; transform-origin: center; animation: bf-throb .7s ease-in-out infinite; }
+@keyframes bf-throb { 50% { transform: scale(1.35); } }
+.bf-hair { transform-box: fill-box; transform-origin: 50% 100%; animation: bf-hair 1.1s ease-in-out infinite alternate; }
+@keyframes bf-hair { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
+.bf-zz { animation: bf-zz 2.4s linear infinite; }
+@keyframes bf-zz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(9px, -15px); opacity: 0; } }
+.bf-tongue { transform-box: fill-box; transform-origin: 50% 0; animation: bf-tongue .6s ease-in-out infinite alternate; }
+@keyframes bf-tongue { to { transform: scaleY(1.25) rotate(-6deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="bf-a-"], .bf-spin, .bf-twinkle, .bf-drip, .bf-flicker, .bf-throb, .bf-hair, .bf-zz, .bf-tongue { animation: none !important; }
+}

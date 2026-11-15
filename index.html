@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Blob Faces</title>
+  <meta name="description" content="Assemble cute, animated blob characters from code.">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main id="stage">
+    <div class="spot" aria-hidden="true"></div>
+    <header class="brand">Blob Faces <span class="n" id="cnt">000</span></header>
+
+    <div class="tools" role="toolbar">
+      <button class="ib" id="sound" data-state="locked" data-i18n-tip="tip.soundLocked">
+        <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      </button>
+      <button class="ib" id="lang" data-i18n-tip="tip.lang" aria-haspopup="menu" aria-expanded="false">
+        <span class="lc"></span>
+      </button>
+      <button class="ib" id="shuffle" data-i18n-tip="tip.shuffle">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg>
+      </button>
+    </div>
+    <div class="menu" id="langMenu" role="menu"></div>
+
+    <div id="grid"></div>
+    <div class="hint" data-i18n="hint"></div>
+  </main>
+
+  <aside id="insp" aria-label="DNA">
+    <div class="ih">
+      <div class="t">DNA <span id="moodTitle"></span></div>
+      <button class="ib" id="close" data-i18n-aria="tip.close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <!-- 预览不跟着滚动；往下滚时自动缩小 -->
+    <div class="pvwrap"><div id="pv"></div></div>
+
+    <div class="body">
+
+      <section class="sec">
+        <div class="lab"><b>01</b><span data-i18n="sec.mood"></span></div>
+        <div class="pills" id="moods"></div>
+      </section>
+
+      <section class="sec">
+        <div class="lab"><b>02</b><span data-i18n="sec.parts"></span></div>
+        <div class="seg" id="tabs" role="tablist">
+          <span class="ind"></span>
+          <button data-tab="eyes" role="tab" data-i18n="tab.eyes"></button>
+          <button data-tab="brows" role="tab" data-i18n="tab.brows"></button>
+          <button data-tab="mouth" role="tab" data-i18n="tab.mouth"></button>
+        </div>
+        <div class="seg seg-sm" id="sides">
+          <span class="ind"></span>
+          <button data-side="both" data-i18n="side.both"></button>
+          <button data-side="left" data-i18n="side.left"></button>
+          <button data-side="right" data-i18n="side.right"></button>
+        </div>
+        <div class="tiles" id="partTiles"></div>
+      </section>
+
+      <section class="sec">
+        <div class="lab"><b>03</b><span data-i18n="sec.extras"></span></div>
+        <div class="tiles" id="extraTiles"></div>
+      </section>
+
+      <section class="sec">
+        <div class="lab"><b>04</b><span data-i18n="sec.color"></span></div>
+        <div class="sws">
+          <div class="sws" id="swatches"></div>
+          <button class="pill" id="shape">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span data-i18n="btn.shape"></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="lab"><b>05</b><span data-i18n="sec.code"></span></div>
+        <pre id="code"></pre>
+      </section>
+    </div>
+
+    <div class="foot">
+      <button class="btn" id="rnd" data-i18n="btn.random"></button>
+      <button class="btn" id="copy" data-i18n="btn.copy"></button>
+      <button class="btn pri" id="dl" data-i18n="btn.download"></button>
+    </div>
+  </aside>
+
+  <script type="module" src="/src/playground/main.ts"></script>
+</body>
+</html>
