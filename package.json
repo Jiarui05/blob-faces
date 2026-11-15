@@ -35,7 +35,13 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "*.css"
+    "*.css",
+    "./src/core/index.ts",
+    "./src/core/moods.ts",
+    "./src/core/parts/*.ts",
+    "./dist/core/index.js",
+    "./dist/core/moods.js",
+    "./dist/core/parts/*.js"
   ],
   "scripts": {
     "dev": "vite",
