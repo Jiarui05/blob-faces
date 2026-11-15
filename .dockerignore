@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+dist
+site
+.env
+.env.*
+*.log
+.DS_Store
+.claude
+blob-faces.html

@@ -7,6 +7,8 @@
 
 <p align="center"><a href="./README.md">English</a></p>
 
+<p align="center"><a href="https://blob-face.jiarui.ink">在线体验</a> · <a href="https://github.com/Jiarui05/blob-faces">GitHub</a></p>
+
 ---
 
 ```ts
@@ -132,7 +134,9 @@ defineMood('chill', {
 ## Playground
 
 ```bash
-npm install
+git clone https://github.com/Jiarui05/blob-faces.git
+cd blob-faces
+npm ci
 npm run dev
 ```
 

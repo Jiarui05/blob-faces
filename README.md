@@ -7,6 +7,8 @@ A tiny, zero-dependency SVG generator — plus a playground to poke them.</p>
 
 <p align="center"><a href="./README.zh-CN.md">简体中文</a></p>
 
+<p align="center"><a href="https://blob-face.jiarui.ink">Live playground</a> · <a href="https://github.com/Jiarui05/blob-faces">GitHub</a></p>
+
 ---
 
 ```ts
@@ -132,7 +134,9 @@ Each part draws around its own origin (`side` is `-1` for the left eye/brow and 
 ## Playground
 
 ```bash
-npm install
+git clone https://github.com/Jiarui05/blob-faces.git
+cd blob-faces
+npm ci
 npm run dev
 ```
 

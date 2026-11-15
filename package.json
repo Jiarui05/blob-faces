@@ -74,6 +74,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/<your-name>/blob-faces.git"
+    "url": "git+https://github.com/Jiarui05/blob-faces.git"
+  },
+  "homepage": "https://blob-face.jiarui.ink",
+  "bugs": {
+    "url": "https://github.com/Jiarui05/blob-faces/issues"
   }
 }
