@@ -20,6 +20,9 @@ export function createStage({ root, grid, bus }: StageOptions) {
   let layout = { cols: 0, rows: 0 };
   let busy = false;
   let focused: Face | null = null;
+  /** 入场动画结束的时刻；要和 styles.css 里 .char svg 的 enter 时长一致 */
+  const ENTER_MS = 650;
+  let introUntil = 0;
 
   /** 每格目标尺寸（越大角色越少）和同屏上限 */
   const CELL = { desktop: 140, mobile: 96 };
@@ -51,6 +54,7 @@ export function createStage({ root, grid, bus }: StageOptions) {
 
     const cx = (L.cols - 1) / 2, cy = (L.rows - 1) / 2;
     const jitter = () => ((Math.random() - 0.5) * L.cs * 0.12).toFixed(1);
+    let lastDelay = 0;
     for (let i = 0; i < L.cols * L.rows; i++) {
       const col = i % L.cols, row = Math.floor(i / L.cols);
       const el = document.createElement('div');
@@ -59,15 +63,23 @@ export function createStage({ root, grid, bus }: StageOptions) {
       grid.appendChild(el);
 
       const face = new Face(el, old[i] ?? createSpec());
-      face.delay = Math.round(Math.hypot(col - cx, row - cy) * 55 + Math.random() * 40); // 从中心向外的涟漪
+      face.delay = Math.round(Math.hypot(col - cx, row - cy) * 45 + Math.random() * 30); // 从中心向外的涟漪
       face.svg.style.setProperty('--d', `${face.delay}ms`);
+      lastDelay = Math.max(lastDelay, face.delay);
       // 只对鼠标悬停生效：触屏上"悬停"和点击是同一下，先换表情会让 Safari 吞掉这次点击
-      el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && face !== focused && !busy) poke(face); });
+      el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && face !== focused && settled()) poke(face); });
       el.addEventListener('click', (e) => { e.stopPropagation(); bus.emit('face:open', { face }); });
       track(face, { magnify: true });
       faces.push(face);
     }
+    // 入场期间不被戳、也不自动换表情：最后一只落定（延迟 + 入场时长）之后才开始
+    introUntil = performance.now() + lastDelay + ENTER_MS;
     bus.emit('stage:built', { count: faces.length });
+  }
+
+  /** 没在换批、入场也已结束 */
+  function settled() {
+    return !busy && performance.now() >= introUntil;
   }
 
   function poke(face: Face) {
@@ -110,7 +122,7 @@ export function createStage({ root, grid, bus }: StageOptions) {
 
   // 时不时有一只自己换表情
   setInterval(() => {
-    if (busy || document.hidden || !faces.length) return;
+    if (!settled() || document.hidden || !faces.length) return;
     const face = pick(faces);
     if (face === focused) return;
     face.setSpec(createSpec({ base: face.spec }), { pop: true });
